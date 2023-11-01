@@ -26,8 +26,9 @@ let lowThreshold = 30;
 // Classifier Variable
 let classifier;
 // Model URL
+//let imageModelURL = 'nothing';
 let imageModelURL = 'https://teachablemachine.withgoogle.com/models/tqvN2-xLx/';
-let connected = false;
+
 
 //BLE UART
 let bleConnectBtn;  //the conect button
@@ -51,6 +52,8 @@ function preload(){
   camImg = loadImage('camera.png');
 }
 
+
+
 let camName = "no camera";
 
 let switchCamButtLoc = [0,0];
@@ -66,7 +69,7 @@ function setup() {
   colour5 = color(230, 230, 230) //off white
   colour6 = color(200, 200, 200, 30) //slightly transparent off white
   colour7 = color(80, 80, 80) //black
-  setupuBitSerial();
+  //setupuBitSerial(); //just makes DOM button for uBitSerial
   
   getCurrentCamera().then(cam => {
     currentCam = cam;
@@ -78,37 +81,34 @@ function setup() {
   switchCamButton = new Button(switchCamButtLoc[0], switchCamButtLoc[1], 60, 60, "  ", nextCamera);
 
   // Create the capture
-  capture = createCapture(capture);
+  capture = createCapture(VIDEO, capture);
   capture.size(width, height);
   capture.hide();
   flippedcapture = ml5.flipImage(capture);
   // Create HTML Elements
-  let a = createA('https://makecode.microbit.org/_cR92k1fFT8be', 'use this microbit code example');
-  a.position(windowWidth/2-100, windowHeight -20);
-  
+  let a = createA('https://makecode.microbit.org/_cR92k1fFT8be', 'micro:bit eksempel kode');
   inputBox = createInput();
-  inputBox.size(300)
-  inputBox.position(windowWidth/2-inputBox.size, windowHeight-100);
-  
+  inputBox.size(560)
+  inputBox.position(windowWidth/2-401, windowHeight/2+310);
   button = createButton('paste model and click here to update');
-  button.position(inputBox.x + inputBox.width, inputBox.y+25);
+  button.position(windowWidth/2+167, inputBox.y);
   button.mousePressed(changeModel);
-
-  bleConnectBtn = createButton("connect Bluetooth");
-  bleConnectBtn.size(150);
-  bleConnectBtn.position(windowWidth/2-155,inputBox.y+50);
-  bleConnectBtn.mousePressed(connectuBitBLE); // function to call upon button being clicked
+  a.position(windowWidth/2+243, windowHeight/2 +380);
+  // bleConnectBtn = createButton("connect Bluetooth");
+  // bleConnectBtn.size(150);
+  // bleConnectBtn.position(windowWidth/2-155,inputBox.y+50);
+  // bleConnectBtn.mousePressed(connectuBitBLE); // function to call upon button being clicked
   
-  disbleConnectBtn = createButton("disconnect Bluetooth");
-  disbleConnectBtn.size(150);
-  disbleConnectBtn.position(windowWidth/2+5,inputBox.y+50);
-  disbleConnectBtn.mousePressed(disconnectuBit); // function to call upon button being clicked
+  // disbleConnectBtn = createButton("disconnect Bluetooth");
+  // disbleConnectBtn.size(150);
+  // disbleConnectBtn.position(windowWidth/2+5,inputBox.y+50);
+  // disbleConnectBtn.mousePressed(disconnectuBit); // function to call upon button being clicked
   
   // place the "test" button for sending data to the micro:bit
-  testBtn = createButton("test bluetooth");
-  testBtn.size(180);
-  testBtn.position(inputBox.x,0);
-  testBtn.mousePressed(testWebBLE); // function to call upon button being clicked
+  // testBtn = createButton("test bluetooth");
+  // testBtn.size(180);
+  // testBtn.position(inputBox.x,0);
+  // testBtn.mousePressed(testWebBLE); // function to call upon button being clicked
   
   // Load initial model and start classifying
   changeModel();
@@ -121,7 +121,6 @@ function testWebBLE(){ //test webusb
 function connectuBitBLE() {
   //uBitConnectDevice(uBitEventHandler);
   microBitConnect();
-  connected = true;
 }
 
 function disconnectuBit() {
@@ -139,12 +138,18 @@ function changeModel() {
   if (newModelURL != '') {
     imageModelURL = newModelURL;
   }
-  classifier = ml5.imageClassifier(imageModelURL + 'model.json', classifycapture);
+  if(imageModelURL != 'nothing'){
+    classifier = ml5.imageClassifier(imageModelURL + 'model.json', classifycapture);  
+  }
+  
 }
 
 let oldConfPercent = "";
 let confPercent;
 function draw() {
+  if(imageModelURL == "nothing"){
+    flippedcapture = ml5.flipImage(capture)
+  }
   background(0);
   // Draw the capture
   image(flippedcapture, 0, 0);
@@ -163,9 +168,19 @@ function draw() {
     text(camName, switchCamButtLoc[0]+40, switchCamButtLoc[1]);
   }
   image(camImg, switchCamButtLoc[0], switchCamButtLoc[1],40,40);
-  text()
   pop();
-  
+  displayConnStatus();
+  push()
+  strokeWeight(20);
+  noFill();
+  //drawingContext.shadowOffsetX = mouseX;
+  //drawingContext.shadowOffsetY = mouseY;
+   drawingContext.shadowBlur = 30;
+   drawingContext.shadowColor = 'black';
+   stroke("white")
+  rect(0,0,width,height);
+  pop()
+  //text(round(frameRate()), width/2, height/2);
 }
 
 // Get a prediction for the current capture frame
@@ -179,7 +194,6 @@ let topConf = 0;
 function gotResult(error, results) {
   // If there is an error
   if (error) {
-    connected = false;
     console.error(error);
     return;
   }
@@ -193,7 +207,8 @@ function gotResult(error, results) {
 }
 
 wasTriggered = false;
-
+let triggSize = 0;
+let triggLabel = "";
 function handleConf(amount, confX, confY){
   push();
   if(label != oldLabel){
@@ -205,6 +220,8 @@ function handleConf(amount, confX, confY){
       handleTrigger();
       fill("255,255,255,255")
       wasTriggered = true;
+      triggSize = 100;
+      triggLabel = label;
     }
   } else if (amount < lowThreshold){
     wasTriggered = false;
@@ -216,22 +233,63 @@ function handleConf(amount, confX, confY){
   fill("black");
   text(confPercent + "% " + label, confX, confY+6);
   pop();
+
+  if(triggSize > 1)8
+  push()
+  textAlign(CENTER, CENTER);
+  fill("white");
+  stroke("black")
+  strokeWeight(5);
+  textSize(40);
+  //textSize(triggSize/2);
+  let blurAmount = 35-triggSize/2;
+  drawingContext.filter = 'blur('+str(blurAmount)+'px)';
+  //drawingContext.filter = 'blur(12px)';
+  text(triggLabel, confX, confY + 40);
+  triggSize--;
+  pop()
+
 }
-let trigCount = 0;;
+
+function displayConnStatus(){
+  //BLE
+  push();
+  noStroke();
+  if(BLEConnected){
+    fill("green");
+  } else {
+    fill("red");
+  }
+  circle(width/2 - 193, height-30,18); 
+  pop();
+
+  //SERIAL
+  push();
+  noStroke();
+  if(connectedDevice != null){
+    fill("green");
+  } else {
+    fill("red");
+  }
+  circle(width/2 - 193, height-60,18); 
+  pop();
+}
+
+let trigCount = 0;
+
 function handleTrigger(){
-  if(connected){
+  if(BLEConnected)
       bleWriteString(label + "\n")
       console.log(label);  
+  if(connectedDevice!=null){
+      uBitWriteLine(label);
   }
-  trigCount++
-  console.log("triggered " + label)
 }
 
 //CAMERA SWITCHER 
 async function getCurrentCamera() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const captureDevices = devices.filter(device => device.kind === 'captureinput');
-
   if (capture && capture.elt && capture.elt.srcObject) {
     return captureDevices.find(device => device.label === capture.elt.srcObject.getTracks()[0].label) || null;
   } else {
@@ -271,11 +329,14 @@ async function nextCamera() {
 }
 
 function mousePressed(){
+  connectSerialButton.handleClick();
   connectBLEButton.handleClick();
   switchCamButton.handleClick();
+  checkSerialConnection();
 }
 
 function mouseReleased(){
+  connectSerialButton.handleRelease();
   connectBLEButton.handleRelease();
   switchCamButton.handleRelease();
 }

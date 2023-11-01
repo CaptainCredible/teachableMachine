@@ -1,3 +1,4 @@
+let BLEConnected = false;
 const UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
 // Allows the micro:bit to transmit a byte array
@@ -9,8 +10,9 @@ let uBitDevice;
 let rxCharacteristic;
 
 async function bleWriteString(string){
-  if (!rxCharacteristic) {
-    console.log("no bluetooth")
+  if (!rxCharacteristic || !uBitDevice.gatt.connected) {
+    console.log("no bluetooth");
+    microBitDisconnect();
     return;
   }
   try {
@@ -47,8 +49,11 @@ async function microBitConnect() {
     rxCharacteristic = await service.getCharacteristic(
       UART_RX_CHARACTERISTIC_UUID
     );
+    BLEConnected = true;
   } catch (error) {
     console.log("error " + error);
+    BLEConnected = false;
+    microBitDisconnect();
   }
 }
 
@@ -56,11 +61,11 @@ function microBitDisconnect() {
   if (!uBitDevice) {
     return;
   }
-
   if (uBitDevice.gatt.connected) {
     uBitDevice.gatt.disconnect();
     console.log("Disconnected");
   }
+  BLEConnected = false;
 }
 
 

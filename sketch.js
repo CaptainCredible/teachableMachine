@@ -55,7 +55,7 @@ function preload(){
 
 
 let camName = "no camera";
-
+let a;
 let switchCamButtLoc = [0,0];
 function setup() {
   createCanvas(800,600);
@@ -84,16 +84,15 @@ function setup() {
   capture = createCapture(VIDEO, capture);
   capture.size(width, height);
   capture.hide();
-  //flippedcapture = ml5.flipImage(capture);
+  flippedcapture = ml5.flipImage(capture);
+  
   // Create HTML Elements
-  let a = createA('https://makecode.microbit.org/_cR92k1fFT8be', 'micro:bit eksempel kode');
+  a = createA('https://makecode.microbit.org/_cR92k1fFT8be', 'micro:bit eksempel kode');
   inputBox = createInput();
   inputBox.size(560)
-  inputBox.position(windowWidth/2-401, windowHeight/2+310);
   button = createButton('paste model and click here to update');
-  button.position(windowWidth/2+167, inputBox.y);
   button.mousePressed(changeModel);
-  a.position(windowWidth/2+243, windowHeight/2 +380);
+  positionDOMElements();
   // bleConnectBtn = createButton("connect Bluetooth");
   // bleConnectBtn.size(150);
   // bleConnectBtn.position(windowWidth/2-155,inputBox.y+50);
@@ -112,6 +111,16 @@ function setup() {
   
   // Load initial model and start classifying
   changeModel();
+}
+
+function positionDOMElements(){
+  inputBox.position(windowWidth/2-401, windowHeight/2+310);
+  button.position(windowWidth/2+167, inputBox.y);
+  a.position(windowWidth/2+243, windowHeight/2 +380);
+}
+
+function windowResized(){
+  positionDOMElements();
 }
 
 function testWebBLE(){ //test webusb
@@ -141,7 +150,6 @@ function changeModel() {
   if(imageModelURL != 'nothing'){
     classifier = ml5.imageClassifier(imageModelURL + 'model.json', classifycapture);  
   }
-  
 }
 
 let oldConfPercent = "";
@@ -150,7 +158,7 @@ function draw() {
   background(0);
   // Draw the capture
   //image(capture,0,0);
-  //image(flippedcapture, 0, 0);
+  image(flippedcapture, 0, 0);
   // Draw the label
   fill(255);
   textSize(16);
@@ -173,19 +181,20 @@ function draw() {
   noFill();
   //drawingContext.shadowOffsetX = mouseX;
   //drawingContext.shadowOffsetY = mouseY;
-   //drawingContext.shadowBlur = 30;
-   //drawingContext.shadowColor = 'black';
+  drawingContext.shadowBlur = 30;
+  drawingContext.shadowColor = 'black';
    stroke("white")
   rect(0,0,width,height);
   pop()
   //text(round(frameRate()), width/2, height/2);
 }
 
+let showImage;
 // Get a prediction for the current capture frame
 function classifycapture() {
   flippedcapture = ml5.flipImage(capture) // IF I COMMENt OUT THIS LINE THE MEMORY LEAK STOPS
   classifier.classify(flippedcapture, gotResult);
-  flippedImage.remove()
+  flippedcapture.remove();
 }
 
 let topConf = 0;
@@ -233,21 +242,21 @@ function handleConf(amount, confX, confY){
   text(confPercent + "% " + label, confX, confY+6);
   pop();
 
-  if(triggSize > 1)8
-  push()
-  textAlign(CENTER, CENTER);
-  fill("white");
-  stroke("black")
-  strokeWeight(5);
-  textSize(40);
-  //textSize(triggSize/2);
-  let blurAmount = 35-triggSize/2;
-  //drawingContext.filter = 'blur('+str(blurAmount)+'px)';
-  //drawingContext.filter = 'blur(12px)';
-  text(triggLabel, confX, confY + 40);
-  triggSize--;
-  pop()
-
+  if(triggSize > 1){
+    push()
+    textAlign(CENTER, CENTER);
+    fill("white");
+    stroke("black")
+    strokeWeight(5);
+    textSize(40);
+    //textSize(triggSize/2);
+    let blurAmount = 35 - triggSize / 2;
+    drawingContext.filter = 'blur(' + str(blurAmount) + 'px)';
+    //drawingContext.filter = 'blur(12px)';
+    text(triggLabel, confX, confY + 40);
+    triggSize--;
+    pop()
+  }
 }
 
 function displayConnStatus(){
@@ -279,9 +288,10 @@ let trigCount = 0;
 function handleTrigger(){
   if(BLEConnected)
       bleWriteString(label + "\n")
-      console.log(label);  
+      console.log("sent BLE" + label);
   if(connectedDevice!=null){
       uBitWriteLine(label);
+      console.log("sent SERIAL" + label);
   }
 }
 

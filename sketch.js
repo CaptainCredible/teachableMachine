@@ -79,7 +79,7 @@ function setup() {
   flippedcapture = ml5.flipImage(capture);
   
   // Create HTML Elements
-  a = createA('https://makecode.microbit.org/_cR92k1fFT8be', 'micro:bit eksempel kode');
+  a = createA('https://www.captaincredible.com/ai-sorteringsmaskin/', '?');
   inputBox = createInput();
   inputBox.size(560)
   button = createButton('paste model and click here to update');
@@ -108,7 +108,7 @@ function setup() {
 function positionDOMElements(){
   inputBox.position(windowWidth/2-401, windowHeight/2+310);
   button.position(windowWidth/2+167, inputBox.y);
-  a.position(windowWidth/2+243, windowHeight/2 +335);
+  a.position(windowWidth/2-400, windowHeight/2 -395);
 }
 
 function windowResized(){

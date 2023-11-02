@@ -106,7 +106,7 @@ function setup() {
 }
 
 function positionDOMElements(){
-  inputBox.position(windowWidth/2-401, windowHeight/2+310);
+  inputBox.position(windowWidth/2-401, windowHeight/2+370);
   button.position(windowWidth/2+167, inputBox.y);
   a.position(windowWidth/2-400, windowHeight/2 -395);
 }

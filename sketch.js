@@ -84,7 +84,7 @@ function setup() {
   capture = createCapture(VIDEO, capture);
   capture.size(width, height);
   capture.hide();
-  flippedcapture = ml5.flipImage(capture);
+  //flippedcapture = ml5.flipImage(capture);
   // Create HTML Elements
   let a = createA('https://makecode.microbit.org/_cR92k1fFT8be', 'micro:bit eksempel kode');
   inputBox = createInput();
@@ -147,12 +147,10 @@ function changeModel() {
 let oldConfPercent = "";
 let confPercent;
 function draw() {
-  if(imageModelURL == "nothing"){
-    flippedcapture = ml5.flipImage(capture)
-  }
   background(0);
   // Draw the capture
-  image(flippedcapture, 0, 0);
+  //image(capture,0,0);
+  //image(flippedcapture, 0, 0);
   // Draw the label
   fill(255);
   textSize(16);
@@ -175,8 +173,8 @@ function draw() {
   noFill();
   //drawingContext.shadowOffsetX = mouseX;
   //drawingContext.shadowOffsetY = mouseY;
-   drawingContext.shadowBlur = 30;
-   drawingContext.shadowColor = 'black';
+   //drawingContext.shadowBlur = 30;
+   //drawingContext.shadowColor = 'black';
    stroke("white")
   rect(0,0,width,height);
   pop()
@@ -185,8 +183,9 @@ function draw() {
 
 // Get a prediction for the current capture frame
 function classifycapture() {
-  flippedcapture = ml5.flipImage(capture)
+  flippedcapture = ml5.flipImage(capture) // IF I COMMENt OUT THIS LINE THE MEMORY LEAK STOPS
   classifier.classify(flippedcapture, gotResult);
+  flippedImage.remove()
 }
 
 let topConf = 0;
@@ -243,7 +242,7 @@ function handleConf(amount, confX, confY){
   textSize(40);
   //textSize(triggSize/2);
   let blurAmount = 35-triggSize/2;
-  drawingContext.filter = 'blur('+str(blurAmount)+'px)';
+  //drawingContext.filter = 'blur('+str(blurAmount)+'px)';
   //drawingContext.filter = 'blur(12px)';
   text(triggLabel, confX, confY + 40);
   triggSize--;
@@ -285,6 +284,7 @@ function handleTrigger(){
       uBitWriteLine(label);
   }
 }
+
 
 //CAMERA SWITCHER 
 async function getCurrentCamera() {

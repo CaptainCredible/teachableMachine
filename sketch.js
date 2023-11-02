@@ -1,4 +1,4 @@
-
+//TODO Try other ways of representing confidence visually
 
 
 let currentCam = null;
@@ -49,6 +49,7 @@ let camName = "no camera";
 let a;
 let switchCamButtLoc = [0,0];
 function setup() {
+  startConnectionCheck();
   createCanvas(800,600);
   switchCamButtLoc[0] = width/2-140;
   switchCamButtLoc[1] = height-45;
@@ -60,14 +61,14 @@ function setup() {
   colour5 = color(230, 230, 230) //off white
   colour6 = color(200, 200, 200, 30) //slightly transparent off white
   colour7 = color(80, 80, 80) //black
-  //setupuBitSerial(); //just makes DOM button for uBitSerial
+//setupuBitSerial(); //just makes DOM button for uBitSerial
   
   getCurrentCamera().then(cam => {
     currentCam = cam;
   });
   nextCamera(); // init cam switching
   nextCamera(); // cycle to cam nr 2, if it exists its most likely the cam to use
-  connectSerialButton = new Button(width/2-280, height-60, buttWidth, 25, "Connect Serial", connectuBit);
+  connectSerialButton = new Button(width/2-280, height-60, buttWidth, 25, "Connect Serial", resetConnection);
   connectBLEButton = new Button(width/2-280, height-30, buttWidth, 25, "Connect Bluetooth", connectuBitBLE);
   switchCamButton = new Button(switchCamButtLoc[0], switchCamButtLoc[1], 60, 60, "  ", nextCamera);
 
@@ -107,7 +108,7 @@ function setup() {
 function positionDOMElements(){
   inputBox.position(windowWidth/2-401, windowHeight/2+310);
   button.position(windowWidth/2+167, inputBox.y);
-  a.position(windowWidth/2+243, windowHeight/2 +380);
+  a.position(windowWidth/2+243, windowHeight/2 +335);
 }
 
 function windowResized(){

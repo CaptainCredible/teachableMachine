@@ -6,12 +6,6 @@
 
 let connectBtn;  //the conect button
 let connectedDevice; //variable to store info about the connection
-let SERConnected = false;
-let testBtn;
-
-function sendTestSer(){
-  uBitSend(connectedDevice,"hello");
-}
 
 function uBitWriteLine(data){ //simplified send only takes string
   if(connectedDevice != null){
@@ -21,13 +15,17 @@ function uBitWriteLine(data){ //simplified send only takes string
   }
 }
 
+function resetConnection(){
+  if(connectedDevice != null){
+    disconnectuBit();
+  }
+  connectuBit();
+}
+
 function setupuBitSerial(){
   connectBtn = createButton("connect to microbit");
   connectBtn.mousePressed(connectuBit); // function to call upon button being clicked
   connectBtn.position(0,0);
-  testBtn = createButton("TEST SERIAL");
-  testBtn.mousePressed(sendTestSer);
-  testBtn.position(0,20);
 }
 
 function connectuBit() {
@@ -38,32 +36,6 @@ function disconnectuBit() {
   uBitDisconnect(connectedDevice);
 }
 
-function checkSerialConnection() {
-  navigator.usb.getDevices()
-    .then(devices => {
-      const isConnected = devices.some(device => {
-        return device.vendorId === MICROBIT_VENDOR_ID && device.productId === MICROBIT_PRODUCT_ID;
-      });
-
-      if (isConnected) {
-        //print("The micro:bit is connected")
-        SERConnected = true;
-        
-        // You can perform additional actions here if needed
-      } else {
-         print("The micro:bit is not connected")
-        SERConnected = false;
-        connectedDevice = null;
-        disconnectuBit();
-        // You can perform actions when the micro:bit is disconnected
-      }
-    })
-    .catch(error => {
-      // Handle any errors that occur while checking the connection
-      console.error("Error checking connection:", error);
-    });
-}
-
 function uBitEventHandler(reason, device, data) {
   //console.log("ooh!");
   switch (reason) {
@@ -71,13 +43,13 @@ function uBitEventHandler(reason, device, data) {
     case "connected":
       if(CONSOLE_LOG) print("connected");
       connectedDevice = device;
-      //connectBtn.hide();
+      connectBtn.hide();
       break
       
     case "disconnected":
       if(CONSOLE_LOG) print("disconnected");
       connectedDevice = null;
-      //connectBtn.show()
+      connectBtn.show()
       break
         
     case "console": // we received a string
@@ -261,9 +233,7 @@ function uBitDisconnect(device) {
  * @param {string} data to send (must not include newlines)
  */
 function uBitSend(device, data) {
-  if(device){
     if(!device.opened)
-    console.log("device exists");
         return
     // Need to send 0x84 (command), length (including newline), data's characters, newline
     let fullLine = data+'\n'
@@ -273,9 +243,6 @@ function uBitSend(device, data) {
     message[1] = encoded.length
     message.set(encoded, 2)
     device.controlTransferOut(DAPOutReportRequest, message) // DAP ID_DAP_Vendor3: https://github.com/ARMmbed/DAPLink/blob/0711f11391de54b13dc8a628c80617ca5d25f070/source/daplink/cmsis-dap/DAP_vendor.c
-  } else {
-    console.log("no serial device");
-  }
 }
 
 
@@ -311,4 +278,34 @@ function uBitConnectDevice(callback) {
     navigator.usb.requestDevice({filters: [{ vendorId: MICROBIT_VENDOR_ID, productId: 0x0204 }]})
         .then(  d => { if(!d.opened) uBitOpenDevice(d, callback)} )
         .catch( () => callback("connection failure", null, null))
+}
+
+function startConnectionCheck() {
+  connectionInterval = setInterval(checkSerialConnection, 1000); // Adjust the interval as needed
+}
+
+function checkSerialConnection() {
+  navigator.usb.getDevices()
+    .then(devices => {
+      const isConnected = devices.some(device => {
+        return device.vendorId === MICROBIT_VENDOR_ID && device.productId === MICROBIT_PRODUCT_ID;
+      });
+
+      if (isConnected) {
+        //print("The micro:bit is connected")
+        SERConnected = true;
+        
+        // You can perform additional actions here if needed
+      } else {
+         print("The micro:bit is not connected")
+        SERConnected = false;
+        connectedDevice = null;
+        disconnectuBit();
+        // You can perform actions when the micro:bit is disconnected
+      }
+    })
+    .catch(error => {
+      // Handle any errors that occur while checking the connection
+      console.error("Error checking connection:", error);
+    });
 }
